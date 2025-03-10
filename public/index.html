@@ -22,17 +22,6 @@
         });
 
 
-        socket.emit('mensaje', { nombre: 'Alejandro' } );
-
-
-        socket.on('nuevo-mensaje', function( payload ){
-            console.log('Escuhando:', payload );
-        });
-
-        socket.on('active-bands', function( bands ){
-            console.clear();
-            console.table( bands );
-        });
 
 
     </script>
