@@ -39,7 +39,6 @@ io.on('connect',  (client) => {
 
 
     
-   //  console.log(bands)
     client.on('disconnect', () => { 
         usuarioDesConectado( uid );
         console.log('Cliente Desconectado')

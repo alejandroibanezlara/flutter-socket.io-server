@@ -2,6 +2,7 @@ const { response } = require("express");
 const bcrypt = require("bcryptjs");
 const Usuario = require("../models/usuario");
 const { generarJWT } = require("../helpers/jwt");
+const { validarGoogleIdToken } = require("../helpers/google-verify-token");
 
 
 const crearUsuario = async (req, res = response) => {
@@ -37,7 +38,6 @@ const crearUsuario = async (req, res = response) => {
         });
 
     }catch(error){
-        console.log(error);
         res.status(500).json({
             ok:false,
             msg: 'Hable con el administrador'
@@ -78,7 +78,6 @@ const loginUsuario = async (req, res = response) => {
         });
 
     }catch(error){
-        console.log(error);
         res.status(500).json({
             ok:false,
             msg: 'Hable con el administrador'
@@ -115,7 +114,6 @@ const renewToken = async(req, res = response) => {
         });
 
     // }catch(error){
-    //     console.log(error);
     //     res.status(500).json({
     //         ok:false,
     //         msg: 'Hable con el administrador'
@@ -126,8 +124,36 @@ const renewToken = async(req, res = response) => {
 
 }
 
+
+const googleAuth = async (req, res = response) => {
+
+    const token = req.body.token;
+
+    if(!token){
+        return res.json({
+            ok: false,
+            msg: "No hay token"
+        })
+    }
+
+    const googleUser = await validarGoogleIdToken(token);
+
+    if( !googleUser ){
+        return res.status(400).json({
+            ok: false,
+            mesg: 'falseee'
+        });
+    }
+
+    res.json({
+        ok:true,
+        googleUser,
+    })
+}
+
 module.exports = {
     crearUsuario,
     loginUsuario,
     renewToken,
+    googleAuth
 }

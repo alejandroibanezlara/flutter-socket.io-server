@@ -1,6 +1,7 @@
 
 const express = require('express');
 const path = require('path');
+const bodyParser = require('body-parser');
 require('dotenv').config();
 
 //DB Config
@@ -13,10 +14,14 @@ const app = express();
 // Lectura y parseo del Body
 app.use(express.json());
 
+// body-parser
+app.use( bodyParser.urlencoded({extended: true}));
+
 //Mis Rutas
 app.use( '/api/login', require('./routes/auth'));
 app.use( '/api/usuarios', require('./routes/usuarios'));
 app.use( '/api/mensajes', require('./routes/mensajes'));
+app.use( '/api/auth', require('./routes/auth'));
 
 
 //Node Server

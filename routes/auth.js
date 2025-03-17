@@ -6,7 +6,7 @@
 
 const { Router } = require('express');
 const { check } = require('express-validator');
-const { crearUsuario, loginUsuario, renewToken } = require('../controllers/auth');
+const { crearUsuario, loginUsuario, renewToken, googleAuth } = require('../controllers/auth');
 const { validarCampos } = require('../middlewares/validar-campos');
 const { validarJWT } = require('../middlewares/validar-jwt');
 
@@ -23,6 +23,9 @@ router.post('/', [
         check('email', 'El email es obligatorio').isEmail(),
         check('password', 'La contraseña es obligatorio').not().isEmpty(),
     ],loginUsuario)
+
+
+router.post('/google', googleAuth);
 
 router.get('/renew',validarJWT, renewToken)
 
