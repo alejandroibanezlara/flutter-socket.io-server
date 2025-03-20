@@ -125,7 +125,7 @@ const renewToken = async(req, res = response) => {
 }
 
 
-const googleAuth = async (req, res = response) => {
+const googleAuth = async (req, res) => {
 
     const token = req.body.token;
 
