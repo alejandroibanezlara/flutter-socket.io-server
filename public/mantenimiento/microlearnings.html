@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mantenimiento Microlearnings</title>
+
+  <!-- Quill -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    input[type="text"], input[type="file"], select {
+      width: 100%; margin: 5px 0; padding: 10px; font-size: 16px;
+    }
+    input[readonly] {
+      background-color: #f2f2f2;
+      cursor: pointer;
+    }
+    .tabs button,
+    .acciones button,
+    #formulario button {
+      padding: 6px 12px;
+      font-size: 14px;
+      margin: 5px 5px 5px 0;
+      cursor: pointer;
+    }
+    .tabs button { font-weight: bold; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 10px 0; border-bottom: 1px solid #ccc; padding-bottom: 8px; }
+    .acciones button { margin-left: 5px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    #buscarInput { width: 300px; padding: 6px; }
+
+    .icon-grid {
+      display: flex; flex-wrap: wrap; gap: 10px; padding: 10px 0;
+    }
+    .icon-grid span {
+      font-size: 24px; cursor: pointer; padding: 8px;
+      border: 1px solid #ccc; border-radius: 5px;
+    }
+    .icon-grid span:hover { background-color: #f0f0f0; }
+    #iconoPreview { font-size: 24px; margin-left: 8px; }
+
+    #modalIconos {
+      display:none; position:fixed; top:10%; left:10%;
+      width:80%; height:70%; background:#fff;
+      border:2px solid #333; padding:20px; overflow:auto;
+      z-index: 1000;
+    }
+
+    .editor-container {
+      display: flex;
+      gap: 40px;
+      margin-top: 20px;
+    }
+
+    .simulador {
+      flex: 0 0 280px;
+      background-color: #000;
+      border-radius: 20px;
+      padding: 20px;
+      color: white;
+      font-family: sans-serif;
+      position: relative;
+      height: 600px;
+    }
+    .simulador h1 {
+      font-size: 20px;
+      font-weight: bold;
+      line-height: 1.3;
+    }
+    .simulador .separador {
+      height: 1px;
+      background-color: #b71c1c;
+      margin: 16px 0;
+    }
+    .simulador .contenido {
+      font-size: 15px;
+      color: #aaa;
+      line-height: 1.6;
+    }
+    .simulador .footer {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #ccc;
+    }
+
+    #iconList > div {
+  display: block;
+  width: 100%;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+}
+
+#iconList > div > div.icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+  </style>
+</head>
+<body>
+
+  <h1>Mantenimiento de Microlearnings</h1>
+
+  <div class="tabs">
+    <button onclick="mostrarTab('biblioteca')">📚 Biblioteca</button>
+    <button onclick="mostrarTab('formulario')">➕ Crear / Editar</button>
+  </div>
+
+  <div id="biblioteca" class="tab-content active">
+    <input id="buscarInput" type="text" placeholder="Buscar por texto corto/largo..." oninput="filtrarLista()" />
+    <ul id="lista"></ul>
+  </div>
+
+  <div id="formulario" class="tab-content">
+    <h3 id="form-title">Crear nuevo Microlearning</h3>
+
+    <div class="editor-container">
+      <div style="flex: 1;">
+        <label>Título:</label>
+        <input id="titulo" type="text" placeholder="Título del microlearning">
+
+        <label>Texto corto:</label>
+        <input id="textoCorto" type="text" placeholder="Texto breve explicativo">
+
+        <label>Texto largo:</label>
+        <div id="editor" style="height: 200px; background: #fff;"></div>
+
+        <label>Área Invencible:</label>
+        <select id="areaInvencible">
+          <option value="Empatía y Solidaridad|group">Empatía y Solidaridad</option>
+          <option value="Carisma|face">Carisma</option>
+          <option value="Disciplina|check">Disciplina</option>
+          <option value="Organización|assignment">Organización</option>
+          <option value="Adaptabilidad|autorenew">Adaptabilidad</option>
+          <option value="Imagen pulida|image">Imagen pulida</option>
+          <option value="Visión estratégica|visibility">Visión estratégica</option>
+          <option value="Educación financiera|money">Educación financiera</option>
+          <option value="Actitud de superación|trending_up">Actitud de superación</option>
+          <option value="Comunicación asertiva|chat">Comunicación asertiva</option>
+        </select>
+
+        <label>Icono:</label>
+        <div>
+          <input id="icono" readonly placeholder="Selecciona un icono" style="width: 200px;">
+          <span id="iconoPreview"></span>
+          <button type="button" onclick="mostrarSelectorIconos()">Elegir icono</button>
+        </div>
+
+          <!-- Selector Iconos -->
+        <div id="modalIconos">
+            <h3>Selecciona un icono</h3>
+            <div class="icon-grid" id="iconList"></div>
+
+
+
+            <button onclick="cerrarSelectorIconos()">Cerrar</button>
+        </div>
+
+        <label>Imagen:</label>
+        <input type="file" id="imagen" accept="image/*" onchange="mostrarNombreImagen()">
+        <div id="imagenNombre"></div>
+
+        <br>
+        <button onclick="guardar()">Guardar</button>
+        <button onclick="cancelarEdicion()" id="cancelarBtn" style="display:none;">Cancelar</button>
+      </div>
+
+      <!-- Simulador móvil -->
+      <div class="simulador">
+        <div id="sim-titulo" class="titulo"></div>
+        <div class="separador"></div>
+        <div id="sim-textoLargo" class="contenido"></div>
+        <div class="footer">
+          <span id="sim-icono">🔖</span>
+          <span id="sim-area">Área Invencible</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selector Iconos -->
+  <div id="modalIconos">
+    <h3>Selecciona un icono</h3>
+    <div class="icon-grid" id="iconList"></div>
+    <button onclick="cerrarSelectorIconos()">Cerrar</button>
+  </div>
+
+  <script>
+    const API_URL = '/api/microlearning';
+    let microlearnings = [];
+    let editandoId = null;
+  
+    // Iconos disponibles para el modal (char: visual, codePoint: lo que se guarda)
+    // const iconos = [
+    //   { name: "volunteer_activism", area: "Empatía y Solidaridad" },
+    //   { name: "groups", area: "Empatía y Solidaridad" },
+    //   { name: "emoji_emotions", area: "Carisma" },
+    //   { name: "star", area: "Carisma" },
+    //   { name: "check_circle", area: "Disciplina" },
+    //   { name: "schedule", area: "Disciplina" },
+    //   { name: "calendar_today", area: "Organización" },
+    //   { name: "folder", area: "Organización" },
+    //   { name: "autorenew", area: "Adaptabilidad" },
+    //   { name: "swap_horiz", area: "Adaptabilidad" },
+    //   { name: "face", area: "Imagen pulida" },
+    //   { name: "style", area: "Imagen pulida" },
+    //   { name: "visibility", area: "Visión estratégica" },
+    //   { name: "insights", area: "Visión estratégica" },
+    //   { name: "account_balance", area: "Educación financiera" },
+    //   { name: "attach_money", area: "Educación financiera" },
+    //   { name: "emoji_events", area: "Actitud de superación" },
+    //   { name: "military_tech", area: "Actitud de superación" },
+    //   { name: "chat", area: "Comunicación asertiva" },
+    //   { name: "record_voice_over", area: "Comunicación asertiva" }
+    // ];
+
+    const iconos = [
+    // https://api.flutter.dev/flutter/material/
+  {"name": "handshake","area": "Empatí­a y Solidaridad","codePoint": "0xf06be"},
+  {"name": "volunteer_activism","area": "Empatí­a y Solidaridad","codePoint": "0xe6c6"},
+  {"name": "groups","area": "Empatí­a y Solidaridad","codePoint": "0xe2ee"},
+  {"name": "emoji_emotions","area": "Carisma","codePoint": "0xe3f4"},
+  {"name": "star","area": "Carisma","codePoint": "0xe838"},
+  {"name": "thumb_up","area": "Carisma","codePoint": "0xe8dc"},
+  {"name": "check_circle","area": "Disciplina","codePoint": "0xe86c"},
+  {"name": "schedule","area": "Disciplina","codePoint": "0xe8b5"},
+  {"name": "assignment_turned_in","area": "Disciplina","codePoint": "0xe86e"},
+  {"name": "calendar_today","area": "Organización","codePoint": "0xe935"},
+  {"name": "folder","area": "Organización","codePoint": "0xe2c7"},
+  {"name": "view_list","area": "Organización","codePoint": "0xe8ef"},
+  {"name": "autorenew","area": "Adaptabilidad","codePoint": "0xe863"},
+  {"name": "swap_horiz","area": "Adaptabilidad","codePoint": "0xe8d4"},
+  {"name": "transform","area": "Adaptabilidad","codePoint": "0xe8e4"},
+  {"name": "face","area": "Imagen Pulida","codePoint": "0xe87c"},
+  {"name": "style","area": "Imagen Pulida","codePoint": "0xe41d"},
+  {"name": "brush","area": "Imagen Pulida","codePoint": "0xe3ae"},
+  {"name": "visibility","area": "Visión Estratégica","codePoint": "0xe8f4"},
+  {"name": "insights","area": "Visión Estratégica","codePoint": "0xf092"},
+  {"name": "track_changes","area": "Visión Estratégica","codePoint": "0xe8e5"},
+  {"name": "account_balance","area": "Educación Financiera","codePoint": "0xe84f"},
+  {"name": "attach_money","area": "Educación Financiera","codePoint": "0xe227"},
+  {"name": "trending_up","area": "Educación Financiera","codePoint": "0xe8e5"},
+  {"name": "trending_up","area": "Actitud de SuperaciÃ³n","codePoint": "0xe8e5"},
+  {"name": "emoji_events","area": "Actitud de SuperaciÃ³n","codePoint": "0xea1a"},
+  {"name": "military_tech","area": "Actitud de SuperaciÃ³n","codePoint": "0xea3e"},
+  {"name": "chat","area": "ComunicaciÃ³n Asertiva","codePoint": "0xe0b7"},
+  {"name": "record_voice_over","area": "ComunicaciÃ³n Asertiva","codePoint": "0xe91f"},
+  {"name": "forum","area": "ComunicaciÃ³n Asertiva","codePoint": "0xe0bf"},
+  {"name": "diversity_3","area": "Empatí­a y Solidaridad","codePoint": "0xf8d7"},
+  {"name": "diversity_1","area": "Empatí­a y Solidaridad","codePoint": "0xf8d5"},
+  {"name": "diversity_2","area": "Empatí­a y Solidaridad","codePoint": "0xf8d6"},
+  {"name": "emoji_people","area": "Empatí­a y Solidaridad","codePoint": "0xea1b"},
+  {"name": "sentiment_satisfied","area": "Empatí­a y Solidaridad","codePoint": "0xe813"},
+  {"name": "support","area": "Empatí­a y Solidaridad","codePoint": "0xf0c7"},
+  {"name": "thumb_up_alt","area": "Empatí­a y Solidaridad","codePoint": "0xe9ec"},
+  {"name": "self_improvement","area": "Empatí­a y Solidaridad","codePoint": "0xea78"},
+  {"name": "favorite","area": "Empatí­a y Solidaridad","codePoint": "0xe87d"},
+  {"name": "favorite_border","area": "Empatí­a y Solidaridad","codePoint": "0xe87e"},
+  {"name": "emoji_nature","area": "Empatí­a y Solidaridad","codePoint": "0xea1c"},
+  {"name": "group_add","area": "Empatí­a y Solidaridad","codePoint": "0xe7f0"},
+  {"name": "emoji_people","area": "Carisma","codePoint": "0xea1b"},
+  {"name": "emoji_objects","area": "Carisma","codePoint": "0xea24"},
+  {"name": "sentiment_very_satisfied","area": "Carisma","codePoint": "0xe814"},
+  {"name": "sentiment_satisfied_alt","area": "Carisma","codePoint": "0xe0ed"},
+  {"name": "public","area": "Carisma","codePoint": "0xe80b"},
+  {"name": "emoji_flags","area": "Carisma","codePoint": "0xea1a"},
+  {"name": "celebration","area": "Carisma","codePoint": "0xea65"},
+  {"name": "lightbulb","area": "Carisma","codePoint": "0xe0f0"},
+  {"name": "auto_awesome","area": "Carisma","codePoint": "0xe65f"},
+  {"name": "military_tech","area": "Carisma","codePoint": "0xea3e"},
+  {"name": "loyalty","area": "Carisma","codePoint": "0xe89a"},
+  {"name": "whatshot","area": "Carisma","codePoint": "0xe80e"},
+  {"name": "task","area": "Disciplina","codePoint": "0xf075"},
+  {"name": "fact_check","area": "Disciplina","codePoint": "0xf0c5"},
+  {"name": "flag","area": "Disciplina","codePoint": "0xe153"},
+  {"name": "event_note","area": "Disciplina","codePoint": "0xe616"},
+  {"name": "alarm_on","area": "Disciplina","codePoint": "0xe858"},
+  {"name": "done_all","area": "Disciplina","codePoint": "0xe877"},
+  {"name": "list_alt","area": "Disciplina","codePoint": "0xe0ee"},
+  {"name": "gavel","area": "Disciplina","codePoint": "0xe90e"},
+  {"name": "rule","area": "Disciplina","codePoint": "0xf1c2"},
+  {"name": "grading","area": "Disciplina","codePoint": "0xea4f"},
+  {"name": "timeline","area": "Disciplina","codePoint": "0xe922"},
+  {"name": "update","area": "Disciplina","codePoint": "0xe923"},
+  {"name": "event","area": "Organización","codePoint": "0xe878"},
+  {"name": "today","area": "Organización","codePoint": "0xe8df"},
+  {"name": "notes","area": "Organización","codePoint": "0xe26c"},
+  {"name": "dashboard","area": "Organización","codePoint": "0xe871"},
+  {"name": "apps","area": "Organización","codePoint": "0xe5c3"},
+  {"name": "storage","area": "Organización","codePoint": "0xe1db"},
+  {"name": "table_chart","area": "Organización","codePoint": "0xe265"},
+  {"name": "widgets","area": "Organización","codePoint": "0xe1bd"},
+  {"name": "grid_view","area": "Organización","codePoint": "0xe9b0"},
+  {"name": "list","area": "Organización","codePoint": "0xe896"},
+  {"name": "manage_search","area": "Organización","codePoint": "0xf02e"},
+  {"name": "label","area": "Organización","codePoint": "0xe892"},
+  {"name": "cached","area": "Adaptabilidad","codePoint": "0xe86a"},
+  {"name": "change_circle","area": "Adaptabilidad","codePoint": "0xe2e7"},
+  {"name": "compare_arrows","area": "Adaptabilidad","codePoint": "0xe915"},
+  {"name": "dynamic_form","area": "Adaptabilidad","codePoint": "0xf1bf"},
+  {"name": "change_history","area": "Adaptabilidad","codePoint": "0xe86b"},
+  {"name": "rotate_right","area": "Adaptabilidad","codePoint": "0xe929"},
+  {"name": "published_with_changes","area": "Adaptabilidad","codePoint": "0xf232"},
+  {"name": "settings_backup_restore","area": "Adaptabilidad","codePoint": "0xe8ba"},
+  {"name": "360","area": "Adaptabilidad","codePoint": "0xe577"},
+  {"name": "open_with","area": "Adaptabilidad","codePoint": "0xe89f"},
+  {"name": "tune","area": "Adaptabilidad","codePoint": "0xe429"},
+  {"name": "build","area": "Adaptabilidad","codePoint": "0xe869"},
+  {"name": "style","area": "Imagen Pulida","codePoint": "0xe41d"},
+  {"name": "palette","area": "Imagen Pulida","codePoint": "0xe40a"},
+  {"name": "photo_camera","area": "Imagen Pulida","codePoint": "0xe412"},
+  {"name": "emoji_emotions","area": "Imagen Pulida","codePoint": "0xe3f4"},
+  {"name": "person","area": "Imagen Pulida","codePoint": "0xe7fd"},
+  {"name": "mood","area": "Imagen Pulida","codePoint": "0xe7f2"},
+  {"name": "auto_fix_high","area": "Imagen Pulida","codePoint": "0xe663"},
+  {"name": "color_lens","area": "Imagen Pulida","codePoint": "0xe3b7"},
+  {"name": "photo_filter","area": "Imagen Pulida","codePoint": "0xe43b"},
+  {"name": "clean_hands","area": "Imagen Pulida","codePoint": "0xf21f"},
+  {"name": "mirror","area": "Imagen Pulida","codePoint": "0xf833"},
+  {"name": "man","area": "Imagen Pulida","codePoint": "0xe4eb"},
+  {"name": "leaderboard","area": "Visión Estratégica","codePoint": "0xf20c"},
+  {"name": "analytics","area": "Visión Estratégica","codePoint": "0xe6a0"},
+  {"name": "bar_chart","area": "Visión Estratégica","codePoint": "0xe26b"},
+  {"name": "data_exploration","area": "Visión Estratégica","codePoint": "0xf1ca"},
+  {"name": "query_stats","area": "Visión Estratégica","codePoint": "0xf1ea"},
+  {"name": "lightbulb_outline","area": "Visión Estratégica","codePoint": "0xe90f"},
+  {"name": "monitoring","area": "Visión Estratégica","codePoint": "0xf20d"},
+  {"name": "explore","area": "Visión Estratégica","codePoint": "0xe87a"},
+  {"name": "insights","area": "Visión Estratégica","codePoint": "0xf092"},
+  {"name": "target","area": "Visión Estratégica","codePoint": "0xf0f2"},
+  {"name": "rocket_launch","area": "Visión Estratégica","codePoint": "0xeb9b"},
+  {"name": "assessment","area": "Visión Estratégica","codePoint": "0xe85c"},
+  {"name": "credit_card","area": "Educación Financiera","codePoint": "0xe870"},
+  {"name": "monetization_on","area": "Educación Financiera","codePoint": "0xe263"},
+  {"name": "bar_chart","area": "Educación Financiera","codePoint": "0xe26b"},
+  {"name": "request_quote","area": "Educación Financiera","codePoint": "0xf1c9"},
+  {"name": "savings","area": "Educación Financiera","codePoint": "0xe2eb"},
+  {"name": "account_balance_wallet","area": "Educación Financiera","codePoint": "0xe850"},
+  {"name": "price_check","area": "Educación Financiera","codePoint": "0xf04a"},
+  {"name": "account_tree","area": "Educación Financiera","codePoint": "0xe97a"},
+  {"name": "insert_chart","area": "Educación Financiera","codePoint": "0xe24b"},
+  {"name": "euro","area": "Educación Financiera","codePoint": "0xea15"},
+  {"name": "paid","area": "Educación Financiera","codePoint": "0xf041"},
+  {"name": "calculate","area": "Educación Financiera","codePoint": "0xea5f"},
+  {"name": "workspace_premium","area": "Actitud de SuperaciÃ³n","codePoint": "0xe7af"},
+  {"name": "emoji_events","area": "Actitud de SuperaciÃ³n","codePoint": "0xea1a"},
+  {"name": "military_tech","area": "Actitud de SuperaciÃ³n","codePoint": "0xea3e"},
+  {"name": "mediation","area": "Actitud de SuperaciÃ³n","codePoint": "0xea38"},
+  {"name": "trophy","area": "Actitud de SuperaciÃ³n","codePoint": "0xf1b9"},
+  {"name": "trending_up","area": "Actitud de SuperaciÃ³n","codePoint": "0xe8e5"},
+  {"name": "upgrade","area": "Actitud de SuperaciÃ³n","codePoint": "0xf0fb"},
+  {"name": "auto_graph","area": "Actitud de SuperaciÃ³n","codePoint": "0xf4fb"},
+  {"name": "timeline","area": "Actitud de SuperaciÃ³n","codePoint": "0xe922"},
+  {"name": "run_circle","area": "Actitud de SuperaciÃ³n","codePoint": "0xef6f"},
+  {"name": "engineering","area": "Actitud de SuperaciÃ³n","codePoint": "0xea3d"},
+  {"name": "push_pin","area": "Actitud de SuperaciÃ³n","codePoint": "0xf10d"},
+  {"name": "sms","area": "ComunicaciÃ³n Asertiva","codePoint": "0xe625"},
+  {"name": "phone_in_talk","area": "ComunicaciÃ³n Asertiva","codePoint": "0xe61d"},
+  {"name": "connect_without_contact","area": "ComunicaciÃ³n Asertiva","codePoint": "0xf223"},
+  {"name": "support_agent","area": "ComunicaciÃ³n Asertiva","codePoint": "0xf0e2"},
+  {"name": "contact_support","area": "ComunicaciÃ³n Asertiva","codePoint": "0xe94c"},
+  {"name": "forum","area": "ComunicaciÃ³n Asertiva","codePoint": "0xe0bf"},
+  {"name": "chat_bubble_outline","area": "ComunicaciÃ³n Asertiva","codePoint": "0xe0cb"},
+  {"name": "alternate_email","area": "ComunicaciÃ³n Asertiva","codePoint": "0xe0e6"},
+  {"name": "speaker_notes","area": "ComunicaciÃ³n Asertiva","codePoint": "0xe8cd"},
+  {"name": "question_answer","area": "ComunicaciÃ³n Asertiva","codePoint": "0xe8af"},
+  {"name": "contact_phone","area": "ComunicaciÃ³n Asertiva","codePoint": "0xe0cf"},
+  {"name": "mail","area": "ComunicaciÃ³n Asertiva","codePoint": "0xe158"}
+]
+
+  
+    const quill = new Quill('#editor', {
+      theme: 'snow',
+      placeholder: 'Texto enriquecido...',
+      modules: {
+        toolbar: [['bold', 'italic', 'underline'], [{ list: 'ordered'}, { list: 'bullet' }], ['link'], ['clean']]
+      }
+    });
+  
+    function mostrarTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+    }
+  
+    async function cargarDatos() {
+      const res = await fetch(API_URL);
+      microlearnings = await res.json();
+      renderLista();
+    }
+  
+    function renderLista() {
+      const filtro = document.getElementById('buscarInput').value.toLowerCase();
+      const lista = document.getElementById('lista');
+      lista.innerHTML = '';
+      microlearnings
+        .filter(m => m.textoCorto.toLowerCase().includes(filtro) || m.textoLargo.toLowerCase().includes(filtro))
+        .forEach(m => {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <b>${m.titulo}</b><br>
+            <i>${m.textoCorto}</i><br>
+            <div class="acciones">
+              <button onclick="editar('${m._id}')">✏️ Editar</button>
+              <button onclick="eliminar('${m._id}')">❌ Eliminar</button>
+            </div>`;
+          lista.appendChild(li);
+        });
+    }
+  
+    function filtrarLista() {
+      renderLista();
+    }
+  
+    function cancelarEdicion() {
+      editandoId = null;
+      document.getElementById('form-title').textContent = 'Crear nuevo Microlearning';
+    //   document.querySelector('#formulario button').textContent = 'Guardar';
+      document.getElementById('cancelarBtn').style.display = 'none';
+      limpiarInputs();
+      actualizarSimulador();
+    }
+  
+    function limpiarInputs() {
+      document.getElementById('titulo').value = '';
+      document.getElementById('textoCorto').value = '';
+      quill.root.innerHTML = '';
+      document.getElementById('icono').value = '';
+      document.getElementById('iconoPreview').textContent = '';
+      document.getElementById('imagen').value = '';
+      document.getElementById('imagenNombre').textContent = '';
+    }
+  
+    async function guardar() {
+      const areaValue = document.getElementById('areaInvencible').value.split('|');
+      const iconName = document.getElementById('icono').value;
+
+      const imagenInput = document.getElementById('imagen');
+      const imagenNombre = imagenInput.files.length ? imagenInput.files[0].name : '';
+
+      const body = {
+        titulo: document.getElementById('titulo').value,
+        textoCorto: document.getElementById('textoCorto').value,
+        textoLargo: quill.root.innerHTML,
+        icono: iconName,
+        imagen: imagenNombre,
+        areaInvencibleObj: {
+          titulo: areaValue[0],
+          icono: iconName || areaValue[1] || "group"
+        }
+      };
+
+      const metodo = editandoId ? 'PUT' : 'POST';
+      const url = editandoId ? `${API_URL}/${editandoId}` : API_URL;
+
+      const res = await fetch(url, {
+        method: metodo,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        alert("Error al guardar:\n" + errorText);
+        return;
+      }
+
+      cancelarEdicion();
+      mostrarTab('biblioteca');
+      cargarDatos();
+    }
+
+    function editar(id) {
+      const m = microlearnings.find(x => x._id === id);
+      if (!m) return;
+
+      document.getElementById('form-title').textContent = 'Editar Microlearning';
+      document.getElementById('cancelarBtn').style.display = 'inline';
+
+      document.getElementById('titulo').value = m.titulo;
+      document.getElementById('textoCorto').value = m.textoCorto;
+      quill.root.innerHTML = m.textoLargo || '';
+
+      if (m.areaInvencibleObj) {
+        document.getElementById('icono').value = m.areaInvencibleObj.icono || '';
+        document.getElementById('iconoPreview').textContent = m.areaInvencibleObj.icono || '';
+        const key = m.areaInvencibleObj.icono || "group";
+        document.getElementById('areaInvencible').value = `${m.areaInvencibleObj.titulo}|${key}`;
+      }
+
+      editandoId = m._id;
+      actualizarSimulador();
+      mostrarTab('formulario');
+    }
+  
+    function getCharByCodePoint(code) {
+      const found = iconos.find(i => i.codePoint === code.toString());
+      return found ? found.char : "🔖";
+    }
+  
+    function getFlutterKeyByCodePoint(code) {
+      return Object.keys(iconoMapFlutter).find(k => iconoMapFlutter[k] === code) || "group";
+    }
+  
+    async function eliminar(id) {
+      if (!confirm('¿Eliminar este microlearning?')) return;
+      await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+      cargarDatos();
+    }
+  
+    // function mostrarSelectorIconos() {
+    //     const iconList = document.getElementById('iconList');
+    //     iconList.innerHTML = '';
+
+    //     const iconosPorArea = {};
+    //     iconos.forEach(icon => {
+    //         if (!iconosPorArea[icon.area]) {
+    //         iconosPorArea[icon.area] = [];
+    //         }
+    //         iconosPorArea[icon.area].push(icon);
+    //     });
+
+    //     for (const area in iconosPorArea) {
+    //         const areaContainer = document.createElement('div');
+    //         areaContainer.style.marginBottom = '30px'; // Más separación entre áreas
+
+    //         const titulo = document.createElement('div');
+    //         titulo.textContent = area;
+    //         titulo.style.fontWeight = 'bold';
+    //         titulo.style.marginBottom = '10px';
+    //         titulo.style.fontSize = '16px';
+    //         areaContainer.appendChild(titulo);
+
+    //         const grid = document.createElement('div');
+    //         grid.className = 'icon-grid';
+
+    //         iconosPorArea[area].forEach(icon => {
+    //         const span = document.createElement('span');
+    //         span.textContent = icon.char;
+    //         span.title = `${icon.char} (${icon.codePoint})`;
+    //         span.onclick = () => {
+    //             document.getElementById('icono').value = icon.codePoint;
+    //             document.getElementById('iconoPreview').textContent = icon.char;
+    //             actualizarSimulador();
+    //             cerrarSelectorIconos();
+    //         };
+    //         grid.appendChild(span);
+    //         });
+
+    //         areaContainer.appendChild(grid);
+    //         iconList.appendChild(areaContainer);
+    //     }
+
+    //     document.getElementById('modalIconos').style.display = 'block';
+    //     }
+  
+
+    // Mostrar los iconos en pantalla
+    function mostrarSelectorIconos() {
+      const iconList = document.getElementById('iconList');
+      iconList.innerHTML = '';
+      const iconosPorArea = {};
+      iconos.forEach(icon => {
+        if (!iconosPorArea[icon.area]) iconosPorArea[icon.area] = [];
+        iconosPorArea[icon.area].push(icon);
+      });
+      for (const area in iconosPorArea) {
+        const areaContainer = document.createElement('div');
+        const titulo = document.createElement('div');
+        titulo.textContent = area;
+        titulo.style.fontWeight = 'bold';
+        titulo.style.marginBottom = '10px';
+        areaContainer.appendChild(titulo);
+
+        const grid = document.createElement('div');
+        grid.className = 'icon-grid';
+        iconosPorArea[area].forEach(icon => {
+          const span = document.createElement('span');
+          span.className = 'material-icons';
+          span.textContent = icon.name;
+          span.title = icon.name;
+          span.onclick = () => {
+            document.getElementById('icono').value = icon.codePoint;
+            // document.getElementById('icono').value = icon.name;
+            document.getElementById('iconoPreview').textContent = icon.name;
+            actualizarSimulador();
+            cerrarSelectorIconos();
+          };
+          grid.appendChild(span);
+        });
+
+        areaContainer.appendChild(grid);
+        iconList.appendChild(areaContainer);
+      }
+      document.getElementById('modalIconos').style.display = 'block';
+    }
+    function cerrarSelectorIconos() {
+      document.getElementById('modalIconos').style.display = 'none';
+    }
+  
+    function mostrarNombreImagen() {
+      const input = document.getElementById('imagen');
+      const nombre = input.files.length ? input.files[0].name : '';
+      document.getElementById('imagenNombre').textContent = nombre;
+    }
+  
+    function actualizarSimulador() {
+      document.getElementById('sim-titulo').textContent = document.getElementById('titulo').value;
+      document.getElementById('sim-textoLargo').innerHTML = quill.root.innerHTML;
+      const code = document.getElementById('icono').value;
+      document.getElementById('sim-icono').textContent = code;
+      const areaValue = document.getElementById('areaInvencible').value.split('|');
+      document.getElementById('sim-area').textContent = areaValue[0];
+    }
+  
+    // Eventos
+    ['titulo', 'icono', 'areaInvencible'].forEach(id => {
+      document.getElementById(id).addEventListener('input', actualizarSimulador);
+    });
+    quill.on('text-change', actualizarSimulador);
+  
+    cargarDatos();
+
+
+    // async function cargarModalIconos() {
+    //     const res = await fetch('componentes/iconos.html');
+    //     const html = await res.text();
+    //     document.getElementById('modalIconos').innerHTML = html;
+
+    //     // Reasigna eventos a los iconos tras cargar el HTML externo
+    //     document.querySelectorAll('#iconList span').forEach(span => {
+    //         span.onclick = () => {
+    //         const code = span.getAttribute('data-code');
+    //         document.getElementById('icono').value = code;
+    //         document.getElementById('iconoPreview').textContent = span.textContent;
+    //         actualizarSimulador();
+    //         cerrarSelectorIconos();
+    //         };
+    //     });
+    //     }
+
+    //     cargarModalIconos();
+  </script>
+</body>
+</html>

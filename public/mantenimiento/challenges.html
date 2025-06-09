@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mantenimiento de Retos</title>
+
+  <!-- Quill -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    input[type="text"], input[type="number"], textarea, select {
+      width: 100%; margin: 5px 0; padding: 8px; font-size: 14px;
+    }
+    input[type="checkbox"] { margin-right: 6px; vertical-align: middle; }
+    .hidden { display: none; }
+    .tabs button,
+    .acciones button,
+    #formulario button {
+      padding: 6px 12px; font-size: 14px; margin: 5px 5px 5px 0; cursor: pointer;
+    }
+    .tabs button { font-weight: bold; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 10px 0; border-bottom: 1px solid #ccc; padding-bottom: 8px; }
+    .acciones button { margin-left: 5px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    #buscarInput { width: 300px; padding: 6px; }
+
+    .icon-grid {
+      display: flex; flex-wrap: wrap; gap: 10px; padding: 10px 0;
+    }
+    .icon-grid span {
+      font-size: 24px; cursor: pointer; padding: 8px;
+      border: 1px solid #ccc; border-radius: 5px;
+    }
+    .icon-grid span:hover { background-color: #f0f0f0; }
+    #iconoPreview { font-size: 24px; margin-left: 8px; }
+
+    #modalIconos {
+      display:none; position:fixed; top:10%; left:10%;
+      width:80%; height:70%; background:#fff;
+      border:2px solid #333; padding:20px; overflow:auto;
+      z-index: 1000;
+    }
+
+    .editor-container {
+      display: flex; gap: 40px; margin-top: 20px;
+    }
+
+    .simulador {
+      flex: 0 0 280px; background-color: #000; border-radius: 20px;
+      padding: 20px; color: white; position: relative; height: 700px;
+    }
+    .simulador .separador {
+      height: 1px; background-color: #b71c1c; margin: 16px 0;
+    }
+    .simulador .contenido {
+      font-size: 15px; color: #aaa; line-height: 1.6;
+    }
+    .simulador .footer {
+      position: absolute; bottom: 20px; left: 20px;
+      display: flex; flex-direction: column; gap: 4px;
+      font-size: 14px; color: #ccc;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .status-active { background-color: #4CAF50; }       /* verde */
+    .status-pending { background-color: #FFEB3B; }      /* amarillo */
+    .status-inactive { background-color: #F44336; }     /* rojo */
+  </style>
+</head>
+<body>
+
+  <h1>Mantenimiento de Retos</h1>
+
+  <div class="tabs">
+    <button onclick="mostrarTab('biblioteca')">📚 Biblioteca</button>
+    <button onclick="mostrarTab('formulario')">➕ Crear / Editar</button>
+  </div>
+
+  <!-- Biblioteca -->
+  <div id="biblioteca" class="tab-content active">
+    <input id="buscarInput" type="text" placeholder="Buscar por título o texto corto..." oninput="filtrarLista()" />
+    <ul id="lista"></ul>
+  </div>
+
+  <!-- Formulario -->
+  <div id="formulario" class="tab-content">
+    <h3 id="form-title">Crear nuevo Reto</h3>
+
+    <div class="editor-container">
+      <div style="flex: 1;">
+
+        <label>Tipo (API):</label>
+        <select id="type">
+          <option value="counter">Contador</option>
+          <option value="inverse_counter">Contador inverso</option>
+          <option value="single">Único</option>
+          <option value="checklist">Checklist</option>
+          <option value="questionnaire">Cuestionario</option>
+          <option value="writing">Escritura</option>
+          <option value="crono">CronoReto</option>
+          <option value="tempo">TempoReto</option>
+          <option value="math">Matemático</option>
+          <option value="red_notebook">Cuaderno Rojo</option>
+        </select>
+
+        <label>Título:</label>
+        <input id="title" type="text" placeholder="Título del reto">
+
+        <label>Texto corto:</label>
+        <input id="shortText" type="text" placeholder="Descripción breve">
+
+        <label>Descripción detallada:</label>
+        <div id="editor" style="height: 200px; background: #fff;"></div>
+
+        <label>Icono:</label>
+        <div>
+          <input id="icon" type="text" readonly placeholder="Selecciona un icono" style="width: 200px;">
+          <span id="iconoPreview"></span>
+          <button type="button" onclick="mostrarSelectorIconos()">Elegir icono</button>
+        </div>
+
+        <label>Área Invencible:</label>
+        <select id="areasSerInvencible">
+          <option value="Empatía y Solidaridad|group">Empatía y Solidaridad</option>
+          <option value="Carisma|face">Carisma</option>
+          <option value="Disciplina|check">Disciplina</option>
+          <option value="Organización|assignment">Organización</option>
+          <option value="Adaptabilidad|autorenew">Adaptabilidad</option>
+          <option value="Imagen Pulida|image">Imagen Pulida</option>
+          <option value="Visión Estratégica|visibility">Visión Estratégica</option>
+          <option value="Educación Financiera|attach_money">Educación Financiera</option>
+          <option value="Actitud de Superación|trending_up">Actitud de Superación</option>
+          <option value="Comunicación Asertiva|chat">Comunicación Asertiva</option>
+        </select>
+
+        <label>Período de tiempo:</label>
+        <select id="timePeriod">
+          <option value="daily">Diario</option>
+          <option value="weekly">Semanal</option>
+          <option value="monthly">Mensual</option>
+          <option value="once">Una vez</option>
+        </select>
+
+        <label>Frecuencia (veces por período):</label>
+        <input id="frequency" type="number" min="1" value="1">
+
+        <label>Puntos:</label>
+        <input id="points" type="number" min="0" value="0">
+
+        <label>Prerequisitos (IDs separados por coma):</label>
+        <input id="prerequisiteChallenges" type="text" placeholder="id1,id2,id3">
+
+        <label>Conteo mínimo completados:</label>
+        <input id="prerequisiteCount" type="number" min="0" value="0">
+
+        <label><input id="notebook" type="checkbox"> Notebook</label>
+
+        <!-- NUEVAS PROPIEDADES -->
+        <label>Status:</label>
+        <select id="status">
+          <option value="pending check">pending check</option>
+          <option value="active">activa</option>
+          <option value="inactive">inactive</option>
+        </select>
+
+        <label>Images (rutas, separadas por coma):</label>
+        <textarea id="images" rows="2" placeholder="/img/1.jpg,/img/2.png"></textarea>
+
+        <!-- Config sólo aparece cuando el tipo de reto lo requiere -->
+        <div id="configContainer" class="hidden">
+          <label>Config (JSON):</label>
+          <textarea id="config" rows="4" placeholder='{"targetValue":8,"unit":"vasos"}'></textarea>
+        </div>
+
+        <br>
+        <button type="button" onclick="guardar()">Guardar</button>
+        <button type="button" onclick="cancelarEdicion()" id="cancelarBtn" style="display:none;">Cancelar</button>
+      </div>
+
+      <!-- Simulador móvil -->
+      <div class="simulador">
+        <h1 id="sim-title"></h1>
+        <div class="separador"></div>
+        <div id="sim-shortText" class="contenido"></div>
+        <div id="sim-description" class="contenido"></div>
+        <div class="footer">
+          <div><span id="sim-icon"></span> <span id="sim-area"></span></div>
+          <div>Período: <span id="sim-timePeriod"></span>, Frec.: <span id="sim-frequency"></span></div>
+          <div>Puntos: <span id="sim-points"></span></div>
+          <div>Prereq.: <span id="sim-prereqIds"></span> (min: <span id="sim-prereqCount"></span>)</div>
+          <div>Notebook: <span id="sim-notebook"></span></div>
+          <div>Status: <span id="sim-status"></span></div>
+          <div>Images: <span id="sim-images"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Iconos -->
+  <div id="modalIconos">
+    <h3>Selecciona un icono</h3>
+    <div class="icon-grid" id="iconList"></div>
+    <button onclick="cerrarSelectorIconos()">Cerrar</button>
+  </div>
+
+  <script>
+    const API_URL = '/api/challenge';
+
+    let retos = [], editandoId = null;
+
+    const configTypes = [
+      'inverse_counter','checklist','questionnaire','math','writing','tempo'
+    ];
+
+    const iconos = [
+      { name: "check_circle", area:"Disciplina" },
+      { name: "favorite", area:"Empatía y Solidaridad" },
+      { name: "face", area:"Carisma" },
+      { name: "assignment", area:"Organización" },
+      { name: "autorenew", area:"Adaptabilidad" },
+      { name: "image", area:"Imagen Pulida" },
+      { name: "visibility", area:"Visión Estratégica" },
+      { name: "attach_money", area:"Educación Financiera" },
+      { name: "trending_up", area:"Actitud de Superación" },
+      { name: "chat", area:"Comunicación Asertiva" }
+    ];
+
+    const quill = new Quill('#editor', {
+      theme: 'snow',
+      placeholder: 'Describe detalladamente el reto...',
+      modules: {
+        toolbar: [['bold','italic','underline'],[{ list:'ordered'},{ list:'bullet'}], ['link'], ['clean']]
+      }
+    });
+
+    function mostrarTab(id) {
+      document.querySelectorAll('.tab-content').forEach(div=>div.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    async function cargarDatos() {
+      try {
+        const res = await fetch(API_URL + '/maintenance');
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.msg || 'Error al listar retos');
+        retos = data.retos;
+        renderLista();
+      } catch (e) {
+        alert('Error al cargar retos:\n' + e.message);
+      }
+    }
+
+    function renderLista() {
+      const filtro = document.getElementById('buscarInput').value.toLowerCase();
+      const lista = document.getElementById('lista');
+      lista.innerHTML = '';
+      retos.filter(r =>
+        r.title.toLowerCase().includes(filtro) ||
+        r.shortText.toLowerCase().includes(filtro)
+      ).forEach(r => {
+        const statusClass = r.status === 'active'
+          ? 'status-active'
+          : r.status === 'pending check'
+            ? 'status-pending'
+            : 'status-inactive';
+
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <div>
+            <span class="status-dot ${statusClass}"></span>
+            <b>${r.title}</b> <small>(<i>${r.type}</i>)</small>
+          </div>
+          <div><i>${r.shortText}</i></div>
+          <div class="acciones">
+            <button onclick="editar('${r._id}')">✏️ Editar</button>
+            <button onclick="eliminar('${r._id}')">❌ Eliminar</button>
+          </div>
+        `;
+        lista.appendChild(li);
+      });
+    }
+
+    function filtrarLista() { renderLista(); }
+
+    function cancelarEdicion() {
+      editandoId = null;
+      document.getElementById('form-title').textContent = 'Crear nuevo Reto';
+      document.getElementById('cancelarBtn').style.display = 'none';
+      limpiarFormulario();
+      toggleConfigSection();
+      actualizarSimulador();
+    }
+
+    function limpiarFormulario() {
+      ['type','title','shortText','icon','frequency','points','prerequisiteChallenges','prerequisiteCount','config','images']
+        .forEach(id => document.getElementById(id).value = '');
+      document.getElementById('notebook').checked = false;
+      document.getElementById('status').selectedIndex = 0;
+      quill.root.innerHTML = '';
+      document.getElementById('areasSerInvencible').selectedIndex = 0;
+      document.getElementById('timePeriod').selectedIndex = 0;
+    }
+
+    function toggleConfigSection() {
+      const type = document.getElementById('type').value;
+      const container = document.getElementById('configContainer');
+      if (configTypes.includes(type)) {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+        document.getElementById('config').value = '';
+      }
+    }
+
+    function actualizarSimulador() {
+      document.getElementById('sim-title').textContent = document.getElementById('title').value;
+      document.getElementById('sim-shortText').textContent = document.getElementById('shortText').value;
+      document.getElementById('sim-description').innerHTML = quill.root.innerHTML;
+      document.getElementById('sim-icon').textContent = document.getElementById('icon').value;
+      const area = document.getElementById('areasSerInvencible').value.split('|')[0] || '';
+      document.getElementById('sim-area').textContent = area;
+      document.getElementById('sim-timePeriod').textContent = document.getElementById('timePeriod').value;
+      document.getElementById('sim-frequency').textContent = document.getElementById('frequency').value;
+      document.getElementById('sim-points').textContent = document.getElementById('points').value;
+      document.getElementById('sim-prereqIds').textContent = document.getElementById('prerequisiteChallenges').value;
+      document.getElementById('sim-prereqCount').textContent = document.getElementById('prerequisiteCount').value;
+      document.getElementById('sim-notebook').textContent = document.getElementById('notebook').checked ? 'Sí' : 'No';
+      document.getElementById('sim-status').textContent = document.getElementById('status').value;
+      document.getElementById('sim-images').textContent = document.getElementById('images').value;
+    }
+
+    function editar(id) {
+      const r = retos.find(x => x._id === id);
+      if (!r) return;
+      editandoId = id;
+      document.getElementById('form-title').textContent = 'Editar Reto';
+      document.getElementById('cancelarBtn').style.display = 'inline';
+
+      document.getElementById('type').value = r.type;
+      document.getElementById('title').value = r.title;
+      document.getElementById('shortText').value = r.shortText;
+      quill.root.innerHTML = r.description || '';
+      document.getElementById('icon').value = r.icon || '';
+      document.getElementById('areasSerInvencible').value =
+        r.areasSerInvencible.length
+          ? `${r.areasSerInvencible[0].titulo}|${r.areasSerInvencible[0].icono}`
+          : '';
+      document.getElementById('timePeriod').value = r.timePeriod;
+      document.getElementById('frequency').value = r.frequency;
+      document.getElementById('points').value = r.points;
+      document.getElementById('prerequisiteChallenges').value = (r.prerequisiteChallenges || []).join(',');
+      document.getElementById('prerequisiteCount').value = r.prerequisiteCount;
+      document.getElementById('notebook').checked = !!r.notebook;
+      document.getElementById('status').value = r.status || 'pending check';
+      document.getElementById('images').value = (r.images || []).join(',');
+      document.getElementById('config').value = r.config ? JSON.stringify(r.config, null, 2) : '';
+
+      toggleConfigSection();
+      actualizarSimulador();
+      mostrarTab('formulario');
+    }
+
+    async function eliminar(id) {
+      if (!confirm('¿Eliminar este reto?')) return;
+      try {
+        const res = await fetch(`${API_URL}/${id}`, {
+          method: 'DELETE',
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.msg);
+        alert('✅ Reto eliminado');
+        cargarDatos();
+      } catch (e) {
+        alert('Error al eliminar:\n' + e.message);
+      }
+    }
+
+    async function guardar() {
+      const body = {
+        type: document.getElementById('type').value,
+        title: document.getElementById('title').value,
+        shortText: document.getElementById('shortText').value,
+        description: quill.root.innerHTML,
+        icon: document.getElementById('icon').value,
+        areasSerInvencible: [{
+          titulo: document.getElementById('areasSerInvencible').value.split('|')[0],
+          icono: document.getElementById('areasSerInvencible').value.split('|')[1]
+        }],
+        timePeriod: document.getElementById('timePeriod').value,
+        frequency: document.getElementById('frequency').value,
+        points: Number(document.getElementById('points').value),
+        prerequisiteChallenges: document.getElementById('prerequisiteChallenges').value
+                                     .split(',').filter(x=>x),
+        prerequisiteCount: Number(document.getElementById('prerequisiteCount').value),
+        notebook: document.getElementById('notebook').checked,
+        status: document.getElementById('status').value,
+        images: document.getElementById('images').value
+                   .split(',').map(s=>s.trim()).filter(x=>x)
+      };
+      const configVal = document.getElementById('config').value.trim();
+      if (configVal) body.config = JSON.parse(configVal);
+
+      try {
+        const metodo = editandoId ? 'PUT' : 'POST';
+        const url = editandoId ? `${API_URL}/${editandoId}` : API_URL;
+        const res = await fetch(url, {
+          method: metodo,
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error((data.errors||[]).join('\n')||data.msg);
+        cancelarEdicion();
+        mostrarTab('biblioteca');
+        cargarDatos();
+      } catch (e) {
+        alert('Error al guardar el reto:\n' + e.message);
+      }
+    }
+
+    function mostrarSelectorIconos() {
+      const iconList = document.getElementById('iconList');
+      iconList.innerHTML = '';
+      const porArea = {};
+      iconos.forEach(i => {
+        porArea[i.area] = porArea[i.area]||[];
+        porArea[i.area].push(i);
+      });
+      for (const area in porArea) {
+        const section = document.createElement('div');
+        const heading = document.createElement('div');
+        heading.textContent = area;
+        heading.style.fontWeight = 'bold';
+        heading.style.margin = '10px 0 5px';
+        section.appendChild(heading);
+        const grid = document.createElement('div');
+        grid.className = 'icon-grid';
+        porArea[area].forEach(i => {
+          const span = document.createElement('span');
+          span.className = 'material-icons';
+          span.textContent = i.name;
+          span.onclick = () => {
+            document.getElementById('icon').value = i.name;
+            document.getElementById('iconoPreview').textContent = i.name;
+            actualizarSimulador();
+            cerrarSelectorIconos();
+          };
+          grid.appendChild(span);
+        });
+        section.appendChild(grid);
+        iconList.appendChild(section);
+      }
+      document.getElementById('modalIconos').style.display = 'block';
+    }
+
+    function cerrarSelectorIconos() {
+      document.getElementById('modalIconos').style.display = 'none';
+    }
+
+    // Listeners iniciales
+    document.getElementById('type').addEventListener('change', toggleConfigSection);
+    Array.from(document.querySelectorAll(
+      '#type,#title,#shortText,#areasSerInvencible,' +
+      '#timePeriod,#frequency,#points,#prerequisiteChallenges,' +
+      '#prerequisiteCount,#notebook,#status,#images'
+    )).forEach(el => el.addEventListener('input', actualizarSimulador));
+    quill.on('text-change', actualizarSimulador);
+
+    // Arranque
+    toggleConfigSection();
+    cargarDatos();
+  </script>
+</body>
+</html>
